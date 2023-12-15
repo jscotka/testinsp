@@ -9,7 +9,7 @@ from pathlib import Path
 import shutil
 from logging import getLogger
 
-from .constants import STORE_PATH
+from testinsp.constants import STORE_PATH
 
 class GenericCompareEx(Exception):
     pass
@@ -72,6 +72,9 @@ class Comparator:
         return False
 
     def _exclude_pattern_matching(self, item):
+        # exclude matching just in case it is string.
+        if not isinstance(item, str):
+            return False
         for pattern in self.exclude_pattern_list:
             if re.search(pattern, item):
                 return True
@@ -96,11 +99,11 @@ class Comparator:
         for counter in range(len(min_items)):
             self.compare(old_data[counter], new_data[counter])
         if len(old_data) < len(new_data):
-            for item in new_data[min_items:]:
+            for item in new_data[len(min_items):]:
                 if not self._exclude_pattern_matching(item):
                     self.log("ADDED ITEM: ", item)
         elif len(old_data) > len(new_data):
-            for item in old_data[min_items:]:
+            for item in old_data[len(min_items):]:
                 if not self._exclude_pattern_matching(item):
                     self.log("REMOVED ITEM: ", item)
 

@@ -3,15 +3,15 @@ from pathlib import Path
 from json import loads, JSONDecodeError, dumps
 from yaml import safe_load, YAMLError, safe_dump
 
-from .utils import FirstRunError, Comparator
-from .constants import YAML, PLAIN, JSON, STORE_PATH
+from testinsp.utils import FirstRunError, Comparator
+from testinsp.constants import YAML, PLAIN, JSON, STORE_PATH
 
 
 class TestInspector:
     store_type = None
 
     def __init__(self, filename=None, pathname=STORE_PATH):
-        self.data = dict()
+        self.data = None
         self.exclude_list = list()
         class_name = self.__class__.__name__
         self.module_name = filename or class_name
@@ -28,12 +28,16 @@ class TestInspector:
         self.data = self.get_data()
         self._store()
 
+    def load(self):
+        self._load_explicit()
+
+    def store(self):
+        self.data = self.get_data()
+        self._store()
+
     def check(self):
-        new_data = self.get_data()
         comp = Comparator(self.module_name, self.exclude_list)
         result_list = comp.compare(self.data, self.get_data())
-        self.data = new_data
-        self._store()
         return result_list
 
     def _load_guess(self):

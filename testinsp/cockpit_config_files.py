@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from .base import TestInspector
-from .constants import YAML, PLAIN
-from .utils import run
+from testinsp.base import TestInspector
+from testinsp.constants import YAML, PLAIN
+from testinsp.utils import run
 
 
 class CockpitPAM(TestInspector):

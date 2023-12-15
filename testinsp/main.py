@@ -1,8 +1,7 @@
-from .network import NetworkInterfaces
-from .storage import DiskInfo
-from .etc import ListEtcDir
-from .cockpit_config_files import CockpitPAM, CockpitConf
-
+from testinsp.network import NetworkInterfaces
+from testinsp.storage import DiskInfo
+from testinsp.etc import ListEtcDir
+from testinsp.cockpit_config_files import CockpitPAM, CockpitConf
 
 
 class RunChecks:
@@ -14,6 +13,14 @@ class RunChecks:
     def init(self):
         for item in self.all:
             item.init()
+
+    def load(self):
+        for item in self.all:
+            item.load()
+
+    def store(self):
+        for item in self.all:
+            item.store()
 
     def check(self):
         results = dict()

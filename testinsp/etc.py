@@ -1,6 +1,6 @@
-from .base import TestInspector
-from .utils import get_dir_list_with_size
-from .constants import PLAIN
+from testinsp.base import TestInspector
+from testinsp.utils import get_dir_list_with_size
+from testinsp.constants import PLAIN
 
 
 class ListEtcDir(TestInspector):

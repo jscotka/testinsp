@@ -1,6 +1,6 @@
-from .base import TestInspector
-from .constants import JSON
-from .utils import get_json_from_process
+from testinsp.base import TestInspector
+from testinsp.constants import JSON
+from testinsp.utils import get_json_from_process
 
 
 class NetworkInterfaces(TestInspector):

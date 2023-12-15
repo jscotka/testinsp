@@ -1,7 +1,7 @@
 from yaml import safe_load
-from .base import TestInspector
-from .constants import YAML
-from .utils import run
+from testinsp.base import TestInspector
+from testinsp.constants import YAML
+from testinsp.utils import run
 
 
 class DiskInfo(TestInspector):
