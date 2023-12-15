@@ -1,20 +1,22 @@
+import os
 from pathlib import Path
 from json import loads, JSONDecodeError, dumps
 from yaml import safe_load, YAMLError, safe_dump
-from utils import FirstRunError
 
-YAML = "yaml"
-JSON = "json"
-PLAIN = "plain"
+from .utils import FirstRunError, Comparator
+from .constants import YAML, PLAIN, JSON, STORE_PATH
 
 
 class TestInspector:
     store_type = None
 
-    def __init__(self, filename=None, pathname="/var/tmp/"):
+    def __init__(self, filename=None, pathname=STORE_PATH):
         self.data = dict()
         self.exclude_list = list()
-        self._default_filename = f"{self.__class__.__name__}.data"
+        class_name = self.__class__.__name__
+        self.module_name = filename or class_name
+        self._default_filename = f"{class_name}.data"
+        os.makedirs(pathname, exist_ok=True)
         if filename is None:
             filename = self._default_filename
         self.storage_file = Path(pathname) / filename
@@ -23,16 +25,18 @@ class TestInspector:
         raise NotImplementedError()
 
     def init(self):
-        # try to load data, if data does not exist create first run
-        try:
-            self.load_explicit()
-        except FirstRunError:
-            self.data = self.get_data()
+        self.data = self.get_data()
+        self._store()
 
     def check(self):
-        raise NotImplementedError()
+        new_data = self.get_data()
+        comp = Comparator(self.module_name, self.exclude_list)
+        result_list = comp.compare(self.data, self.get_data())
+        self.data = new_data
+        self._store()
+        return result_list
 
-    def load_guess(self):
+    def _load_guess(self):
         with open(self.storage_file, "w") as fd:
             data_read = fd.read()
         try:
@@ -46,7 +50,7 @@ class TestInspector:
                 self.data = data_read
                 self.store_type = PLAIN
 
-    def load_explicit(self):
+    def _load_explicit(self):
         try:
             with open(self.storage_file, "r") as fd:
                 data = fd.read()
@@ -59,7 +63,7 @@ class TestInspector:
         elif self.store_type == PLAIN:
             self.data = data
 
-    def store(self):
+    def _store(self):
         with open(self.storage_file, "w") as fd:
             if self.store_type == JSON:
                 data = dumps(self.data)

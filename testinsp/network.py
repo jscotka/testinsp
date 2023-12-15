@@ -1,14 +1,16 @@
-from .base import TestInspector, JSON
-from .utils import get_json_from_process, Comparator
+from .base import TestInspector
+from .constants import JSON
+from .utils import get_json_from_process
 
 
-class Interfaces(TestInspector):
+class NetworkInterfaces(TestInspector):
     store_type = JSON
-    _get_data_command_list = "ip -j a".split(" ")
+    _get_data_command = "ip -j a"
+
+    def __init__(self):
+        super().__init__()
+        self.exclude_list += ["preferred_life_time", "valid_life_time"]
 
     def get_data(self):
-        return get_json_from_process(self._get_data_command_list)
+        return get_json_from_process(self._get_data_command)
 
-    def check(self):
-        result_list = Comparator().compare(self.data, self.get_data(), self.exclude_list)
-        return result_list
