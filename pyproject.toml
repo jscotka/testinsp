@@ -1,0 +1,17 @@
+[project]
+name = "testinsp"
+description = "Test Inspector for your test checking system state"
+version = "0.0.1"
+authors = [
+    { name = "Jan Scotka", email = "jscotka@redhat.com" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "tox",
+    "pre-commit",
+]
+
+[build-system]
+requires = ["setuptools"]
