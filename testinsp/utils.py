@@ -71,7 +71,7 @@ class Comparator:
             return item1 == item2
         elif len(item1) == len(item2):
             return True
-        self.log(CHANGE, f"SIZE: old={len(item1)}, new={len(item2)}")
+        self.log(CHANGE, "SIZE", f"old={len(item1)}, new={len(item2)}")
         return False
 
     def _exclude_pattern_matching(self, item):
