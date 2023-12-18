@@ -12,7 +12,25 @@ class NetworkInterfaces(TestInspector):
         self.exclude_list += ["preferred_life_time", "valid_life_time"]
 
     def get_data(self):
-        return get_json_from_process(self._get_data_command)
+        # because of original data are so big for every interface, gather some basic
+        raw_data = get_json_from_process(self._get_data_command)
+        data = dict()
+        for item in raw_data:
+            interface = item["ifname"]
+            adresses = list()
+            addrinfo_list = ["local", "prefixlen", "family", "label", "scope"]
+            for item in item["addr_info"]:
+                new_item = dict()
+                for key in addrinfo_list:
+                    new_item[key] = item.get(key)
+                adresses.append(new_item)
+            state = item.get("operstate")
+            data[interface] = {
+                "ifname": interface,
+                "adresses": adresses,
+                "state": state,
+            }
+        return data
 
 
 class FirewallStatus(TestInspector):
