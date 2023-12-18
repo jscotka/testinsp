@@ -9,7 +9,8 @@ from pathlib import Path
 import shutil
 from logging import getLogger
 
-from testinsp.constants import STORE_PATH
+from testinsp.constants import STORE_PATH, ADD, REM, CHANGE
+
 
 class GenericCompareEx(Exception):
     pass
@@ -32,7 +33,7 @@ class FirstRunError(Exception):
 
 
 def run(command, shell=True, *args, **kwargs):
-        return check_output(command, *args, shell=shell, **kwargs).decode()
+    return check_output(command, *args, shell=shell, **kwargs).decode()
 
 
 def get_json_from_process(command, *args, **kwargs):
@@ -44,7 +45,9 @@ def get_yaml_from_process(command, *args, **kwargs):
 
 
 def get_dir_list_with_size(directory):
-    output = run(f"""find {directory} -type f -printf "%p %s\\n" 2>/dev/null | sort || true""")
+    output = run(
+        f"""find {directory} -type f -printf "%p %s\\n" 2>/dev/null | sort || true"""
+    )
     return output
 
 
@@ -58,7 +61,7 @@ class Comparator:
         self.logger = getLogger(self.module_name)
 
     def log(self, *args):
-        self.differences += args
+        self.differences.append(args)
         self.logger.info(f">> {self.module_name} >> {args}")
 
     def check_len(self, item1, item2):
@@ -68,7 +71,7 @@ class Comparator:
             return item1 == item2
         elif len(item1) == len(item2):
             return True
-        self.log(f"SIZE DIFFERENCE: old={len(item1)}, new={len(item2)}")
+        self.log(CHANGE, f"SIZE: old={len(item1)}, new={len(item2)}")
         return False
 
     def _exclude_pattern_matching(self, item):
@@ -99,13 +102,13 @@ class Comparator:
         for counter in range(len(min_items)):
             self.compare(old_data[counter], new_data[counter])
         if len(old_data) < len(new_data):
-            for item in new_data[len(min_items):]:
+            for item in new_data[len(min_items) :]:
                 if not self._exclude_pattern_matching(item):
-                    self.log("ADDED ITEM: ", item)
+                    self.log(ADD, item)
         elif len(old_data) > len(new_data):
-            for item in old_data[len(min_items):]:
+            for item in old_data[len(min_items) :]:
                 if not self._exclude_pattern_matching(item):
-                    self.log("REMOVED ITEM: ", item)
+                    self.log(REM, item)
 
     def _compare_dict(self, old_data, new_data):
         for key in set(list(old_data.keys()) + list(new_data.keys())):
@@ -114,21 +117,22 @@ class Comparator:
             if key in old_data.keys() and key in new_data.keys():
                 self.compare(old_data[key], new_data[key])
             elif key in old_data.keys():
-                self.log(f"REMOVED ITEM: key:{key} ", old_data[key])
+                self.log(REM, f"key:{key} ", old_data[key])
             else:
-                self.log(f"ADDED ITEM: key:{key} ", new_data[key])
+                self.log(ADD, f"key:{key} ", new_data[key])
 
     def _compare_string(self, old_data, new_data):
         if "\n" in old_data or "\n" in new_data:
             return self.compare_multiline(old_data, new_data)
-        if old_data != new_data and not\
-                (self._exclude_pattern_matching(old_data) or
-                 self._exclude_pattern_matching(new_data)):
-            self.log(f"CHANGED STRING: {old_data} != {new_data}")
+        if old_data != new_data and not (
+            self._exclude_pattern_matching(old_data)
+            or self._exclude_pattern_matching(new_data)
+        ):
+            self.log(CHANGE, old_data, new_data)
 
     def _compare_num(self, old_data, new_data):
         if old_data != new_data:
-            self.log(f"CHANGED NUMBER: {old_data} != {new_data}")
+            self.log(CHANGE, old_data, new_data)
 
     def compare_multiline(self, old_data, new_data):
         old_list = list()
@@ -146,9 +150,9 @@ class Comparator:
         for item in different:
             line = item[2:]
             if item.startswith("+"):
-                self.log("ADDED LINE", f">{line}<")
+                self.log(ADD, line)
             elif item.startswith("-"):
-                self.log("REMOVED LINE", f">{line}<")
+                self.log(REM, line)
         return self.differences
 
     def __compare_files(self, file_path, name_to_store="", old_data=None):
