@@ -32,7 +32,14 @@ class FirstRunError(Exception):
     pass
 
 
-def run(command, shell=True, *args, **kwargs):
+def run(command, shell=True, external_executor=None, *args, **kwargs):
+    if not external_executor:
+        return _run(command, shell, *args, **kwargs)
+    else:
+        return external_executor(command, *args, **kwargs)
+
+
+def _run(command, shell=True, *args, **kwargs):
     return check_output(command, *args, shell=shell, **kwargs).decode()
 
 
