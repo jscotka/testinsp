@@ -44,7 +44,7 @@ def get_yaml_from_process(command, *args, **kwargs):
 
 
 def get_dir_list_with_size(directory):
-    output = run(f"""find {directory} -type f -printf "%p %s\\n" 2>/dev/null || true""")
+    output = run(f"""find {directory} -type f -printf "%p %s\\n" 2>/dev/null | sort || true""")
     return output
 
 

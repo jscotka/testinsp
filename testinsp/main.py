@@ -1,11 +1,13 @@
-from testinsp.network import NetworkInterfaces
+from testinsp.network import NetworkInterfaces, FirewallStatus
 from testinsp.storage import DiskInfo
 from testinsp.etc import ListEtcDir
 from testinsp.cockpit_config_files import CockpitPAM, CockpitConf
+from testinsp.services import ServiceInfo
+
 
 
 class RunChecks:
-    all = [NetworkInterfaces(), DiskInfo(), ListEtcDir(), CockpitConf(), CockpitPAM()]
+    all = [NetworkInterfaces(), DiskInfo(), ListEtcDir(), CockpitConf(), CockpitPAM(), ServiceInfo(), FirewallStatus()]
 
     def __init__(self):
         pass
