@@ -1,6 +1,5 @@
 from testinsp.base import TestInspector
 from testinsp.constants import YAML
-from testinsp.utils import run, get_json_from_process
 
 
 class NetworkInterfaces(TestInspector):
@@ -13,7 +12,7 @@ class NetworkInterfaces(TestInspector):
 
     def get_data(self):
         # because of original data are so big for every interface, gather some basic
-        raw_data = get_json_from_process(self._get_data_command)
+        raw_data = self._get_json_from_process(self._get_data_command)
         data = dict()
         for item in raw_data:
             interface = item["ifname"]
@@ -38,7 +37,7 @@ class FirewallStatus(TestInspector):
     _get_data_command = "firewall-cmd --list-all || true"
 
     def get_data(self):
-        raw_data = run(self._get_data_command)
+        raw_data = self.run(self._get_data_command)
         data = dict()
         key = "Unknown"
         for raw_item in raw_data.splitlines():

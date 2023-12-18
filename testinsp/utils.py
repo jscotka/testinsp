@@ -1,6 +1,3 @@
-from subprocess import check_output
-from json import loads
-from yaml import safe_load
 import re
 import os
 import numbers
@@ -8,7 +5,6 @@ import difflib
 from pathlib import Path
 import shutil
 from logging import getLogger
-
 from testinsp.constants import STORE_PATH, ADD, REM, CHANGE
 
 
@@ -30,32 +26,6 @@ class DifferentSize(GenericCompareEx):
 
 class FirstRunError(Exception):
     pass
-
-
-def run(command, shell=True, external_executor=None, *args, **kwargs):
-    if not external_executor:
-        return _run(command, shell, *args, **kwargs)
-    else:
-        return external_executor(command, *args, **kwargs)
-
-
-def _run(command, shell=True, *args, **kwargs):
-    return check_output(command, *args, shell=shell, **kwargs).decode()
-
-
-def get_json_from_process(command, *args, **kwargs):
-    return loads(run(command, *args, **kwargs))
-
-
-def get_yaml_from_process(command, *args, **kwargs):
-    return safe_load(run(command, *args, **kwargs))
-
-
-def get_dir_list_with_size(directory):
-    output = run(
-        f"""find {directory} -type f -printf "%p %s\\n" 2>/dev/null | sort || true"""
-    )
-    return output
 
 
 class Comparator:
