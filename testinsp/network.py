@@ -1,13 +1,15 @@
 from testinsp.base import TestInspector
-from testinsp.constants import YAML
+from testinsp.constants import YAML, STORE_PATH
 
 
 class NetworkInterfaces(TestInspector):
     store_type = YAML
     _get_data_command = "ip -j a"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, filename=None, pathname=STORE_PATH, external_executor=None):
+        super().__init__(
+            filename=filename, pathname=pathname, external_executor=external_executor
+        )
         self.exclude_list += ["preferred_life_time", "valid_life_time"]
 
     def get_data(self):

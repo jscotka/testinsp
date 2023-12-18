@@ -5,12 +5,17 @@ from testinsp.cockpit_config_files import CockpitPAM, CockpitConf
 from testinsp.services import ServiceInfo
 
 
-
 class RunChecks:
-    all = [NetworkInterfaces(), DiskInfo(), ListEtcDir(), CockpitConf(), CockpitPAM(), ServiceInfo(), FirewallStatus()]
-
-    def __init__(self):
-        pass
+    def __init__(self, external_executor=None):
+        self.all = [
+            NetworkInterfaces(external_executor=external_executor),
+            DiskInfo(external_executor=external_executor),
+            ListEtcDir(external_executor=external_executor),
+            CockpitConf(external_executor=external_executor),
+            CockpitPAM(external_executor=external_executor),
+            ServiceInfo(external_executor=external_executor),
+            FirewallStatus(external_executor=external_executor),
+        ]
 
     def init(self):
         for item in self.all:
@@ -27,5 +32,5 @@ class RunChecks:
     def check(self):
         results = dict()
         for item in self.all:
-            results[item. module_name] = item.check()
+            results[item.module_name] = item.check()
         return results
