@@ -17,7 +17,7 @@ class NetworkInterfaces(TestInspector):
 
 class FirewallStatus(TestInspector):
     store_type = YAML
-    _get_data_command = "firewall-cmd --list-all"
+    _get_data_command = "firewall-cmd --list-all || true"
 
     def get_data(self):
         raw_data = run(self._get_data_command)
