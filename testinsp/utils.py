@@ -115,9 +115,9 @@ class Comparator:
                     old_data[key], new_data[key], internal_path=internal_path + [key]
                 )
             elif key in old_data.keys():
-                self.log(REM, f"key:{key} ", old_data[key], internal_path=internal_path)
+                self.log(REM, key, old_data[key], internal_path=internal_path)
             else:
-                self.log(ADD, f"key:{key} ", new_data[key], internal_path=internal_path)
+                self.log(ADD, key, new_data[key], internal_path=internal_path)
 
     def _compare_string(self, old_data, new_data, internal_path):
         if "\n" in old_data or "\n" in new_data:
