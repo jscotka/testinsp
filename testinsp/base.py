@@ -12,9 +12,15 @@ from testinsp.constants import YAML, PLAIN, JSON, STORE_PATH
 class TestInspector:
     store_type = None
 
-    def __init__(self, filename=None, pathname=STORE_PATH, external_executor=None):
+    def __init__(
+        self,
+        filename=None,
+        pathname=STORE_PATH,
+        external_executor=None,
+        exclude_list: list = None,
+    ):
         self.data = None
-        self.exclude_list = list()
+        self.exclude_list = exclude_list or list()
         class_name = self.__class__.__name__
         self.module_name = filename or class_name
         self._default_filename = f"{class_name}.data"
@@ -60,9 +66,14 @@ class TestInspector:
         return safe_load(self.run(command, *args, **kwargs))
 
     def _get_dir_list_with_size(self, directory):
-        output = self.run(
-            f"""find {directory} -type f -printf "%p %s\\n" 2>/dev/null | sort || true"""
+        raw_output = self.run(
+            f"""find {directory} -type f -printf "%s %p\\n" 2>/dev/null || true"""
         )
+        output = dict()
+        for line in raw_output.split("\n"):
+            if " " in line:
+                size, name = line.split(" ", 1)
+                output[name.strip()] = int(size.strip())
         return output
 
     def _load_guess(self):

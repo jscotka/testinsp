@@ -1,9 +1,9 @@
 from testinsp.base import TestInspector
-from testinsp.constants import PLAIN
+from testinsp.constants import YAML
 
 
 class ListEtcDir(TestInspector):
-    store_type = PLAIN
+    store_type = YAML
     dir_name = "/etc"
 
     def get_data(self):

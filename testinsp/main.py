@@ -6,16 +6,25 @@ from testinsp.services import ServiceInfo
 
 
 class RunChecks:
-    def __init__(self, external_executor=None):
-        self.all = [
-            NetworkInterfaces(external_executor=external_executor),
-            DiskInfo(external_executor=external_executor),
-            ListEtcDir(external_executor=external_executor),
-            CockpitConf(external_executor=external_executor),
-            CockpitPAM(external_executor=external_executor),
-            ServiceInfo(external_executor=external_executor),
-            FirewallStatus(external_executor=external_executor),
+    def __init__(self, external_executor=None, exclude_dict: dict = None):
+        all_class = [
+            NetworkInterfaces,
+            DiskInfo,
+            ListEtcDir,
+            CockpitConf,
+            CockpitPAM,
+            ServiceInfo,
+            FirewallStatus,
         ]
+        self.all = list()
+        if not exclude_dict:
+            exclude_dict = dict()
+        for one_class in all_class:
+            exclude_item_list = exclude_dict.get(one_class.__name__)
+            item = one_class(
+                external_executor=external_executor, exclude_list=exclude_item_list
+            )
+            self.all.append(item)
 
     def init(self):
         for item in self.all:

@@ -5,7 +5,15 @@ import difflib
 from pathlib import Path
 import shutil
 from logging import getLogger
-from testinsp.constants import STORE_PATH, ADD, REM, CHANGE
+from testinsp.constants import (
+    STORE_PATH,
+    ADD,
+    REM,
+    CHANGE,
+    CHANGE_TYPE,
+    DATA_CHANGE,
+    DATA_PATH,
+)
 
 
 class GenericCompareEx(Exception):
@@ -37,9 +45,14 @@ class Comparator:
         self.exclude_pattern_list = exclude_pattern_list
         self.logger = getLogger(self.module_name)
 
-    def log(self, *args):
-        self.differences.append(args)
-        self.logger.info(f">> {self.module_name} >> {args}")
+    def log(self, change_type, *args, internal_path=None):
+        self.differences.append(
+            {CHANGE_TYPE: change_type, DATA_CHANGE: args, DATA_PATH: internal_path}
+        )
+        path = ""
+        if internal_path and isinstance(internal_path, list):
+            path = "(" + ".".join(map(str, internal_path)) + ")"
+        self.logger.info(f">> {self.module_name} {path}>> {args}")
 
     def check_len(self, item1, item2):
         if isinstance(item1, numbers.Number) or isinstance(item1, numbers.Number):
@@ -60,58 +73,66 @@ class Comparator:
                 return True
         return False
 
-    def compare(self, old_data, new_data):
+    def compare(self, old_data, new_data, internal_path=None):
+        if internal_path is None:
+            internal_path = list()
         if type(old_data) != type(new_data):
             raise NotComparable(old_data, new_data)
         self.check_len(old_data, new_data)
         if isinstance(new_data, (list, set, tuple)):
-            self._compare_list(old_data, new_data)
+            self._compare_list(old_data, new_data, internal_path=internal_path)
         elif isinstance(new_data, dict):
-            self._compare_dict(old_data, new_data)
+            self._compare_dict(old_data, new_data, internal_path=internal_path)
         elif isinstance(new_data, str):
-            self._compare_string(old_data, new_data)
+            self._compare_string(old_data, new_data, internal_path=internal_path)
         elif isinstance(new_data, numbers.Number):
-            self._compare_num(old_data, new_data)
+            self._compare_num(old_data, new_data, internal_path=internal_path)
         return self.differences
 
-    def _compare_list(self, old_data, new_data):
+    def _compare_list(self, old_data, new_data, internal_path):
         min_items = old_data if len(old_data) <= len(new_data) else new_data
         for counter in range(len(min_items)):
-            self.compare(old_data[counter], new_data[counter])
+            self.compare(
+                old_data[counter],
+                new_data[counter],
+                internal_path=internal_path + [counter],
+            )
         if len(old_data) < len(new_data):
             for item in new_data[len(min_items) :]:
                 if not self._exclude_pattern_matching(item):
-                    self.log(ADD, item)
+                    self.log(ADD, item, internal_path=internal_path)
         elif len(old_data) > len(new_data):
             for item in old_data[len(min_items) :]:
                 if not self._exclude_pattern_matching(item):
-                    self.log(REM, item)
+                    self.log(REM, item, internal_path=internal_path)
 
-    def _compare_dict(self, old_data, new_data):
+    def _compare_dict(self, old_data, new_data, internal_path):
         for key in set(list(old_data.keys()) + list(new_data.keys())):
             if self._exclude_pattern_matching(key):
                 continue
             if key in old_data.keys() and key in new_data.keys():
-                self.compare(old_data[key], new_data[key])
+                self.compare(
+                    old_data[key], new_data[key], internal_path=internal_path + [key]
+                )
             elif key in old_data.keys():
-                self.log(REM, f"key:{key} ", old_data[key])
+                self.log(REM, f"key:{key} ", old_data[key], internal_path=internal_path)
             else:
-                self.log(ADD, f"key:{key} ", new_data[key])
+                self.log(ADD, f"key:{key} ", new_data[key], internal_path=internal_path)
 
-    def _compare_string(self, old_data, new_data):
+    def _compare_string(self, old_data, new_data, internal_path):
         if "\n" in old_data or "\n" in new_data:
-            self.compare_multiline(old_data, new_data)
+            self.compare_multiline(old_data, new_data, internal_path=internal_path)
         if old_data != new_data and not (
             self._exclude_pattern_matching(old_data)
             or self._exclude_pattern_matching(new_data)
         ):
-            self.log(CHANGE, old_data, new_data)
+            self.log(CHANGE, old_data, new_data, internal_path=internal_path)
 
-    def _compare_num(self, old_data, new_data):
+    def _compare_num(self, old_data, new_data, internal_path):
         if old_data != new_data:
-            self.log(CHANGE, old_data, new_data)
+            self.log(CHANGE, old_data, new_data, internal_path=internal_path)
 
-    def compare_multiline(self, old_data, new_data):
+    def compare_multiline(self, old_data, new_data, internal_path):
         old_list = list()
         new_list = list()
         # filter excluded patterns
@@ -127,9 +148,9 @@ class Comparator:
         for item in different:
             line = item[2:]
             if item.startswith("+"):
-                self.log(ADD, line)
+                self.log(ADD, line, internal_path=internal_path)
             elif item.startswith("-"):
-                self.log(REM, line)
+                self.log(REM, line, internal_path=internal_path)
 
     def __compare_files(self, file_path, name_to_store="", old_data=None):
         file = Path(file_path)
