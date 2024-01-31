@@ -38,7 +38,7 @@ IdleTimeout=30
         check_call("sudo touch /etc/cockpit/test.xx", shell=True)
 
     def test_fail_new_network_iface(self):
-        command="""sudo ip link add dev vm1 type veth peer name vm2;
+        command = """sudo ip link add dev vm1 type veth peer name vm2;
             sudo ip link set dev vm1 up;
             sudo ip tuntap add tapm mode tap;
             sudo ip link set dev tapm up;

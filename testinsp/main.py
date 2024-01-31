@@ -3,6 +3,7 @@ from testinsp.storage import DiskInfo
 from testinsp.etc import ListEtcDir
 from testinsp.cockpit_config_files import CockpitPAM, CockpitConf
 from testinsp.services import ServiceInfo
+from testinsp.users import UserInfo, GroupInfo
 
 
 class RunChecks:
@@ -15,6 +16,8 @@ class RunChecks:
             CockpitPAM,
             ServiceInfo,
             FirewallStatus,
+            UserInfo,
+            GroupInfo,
         ]
         self.all = list()
         if not exclude_dict:
