@@ -1,1 +1,1 @@
-from testinsp.main import RunChecks
+from testinsp.main import RunChecks, RunChecksInParallel
