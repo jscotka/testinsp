@@ -42,29 +42,38 @@ class RunChecks:
         for item in self.all:
             item.store()
 
-    def check(self):
+    def check(self, init_after_check=False):
         results = dict()
         for item in self.all:
-            results[item.module_name] = item.check()
+            results[item.module_name] = item.check(init_after_check=init_after_check)
         return results
 
 
 class RunChecksInParallel(RunChecks):
     @staticmethod
-    def _mp_helper(param):
-        class_item = param[0]
-        method = param[1]
-        return (class_item, getattr(class_item, method)())
+    def _init_helper(class_item):
+        class_item.init()
+        return class_item
+
+    @staticmethod
+    def _check_helper(params):
+        class_item = params[0]
+        init_after_check = params[1]
+        result = class_item.check(init_after_check=init_after_check)
+        return class_item, result
 
     def init(self):
         with Pool(len(self.all)) as process:
-            output = process.map(self._mp_helper, [(x, "init") for x in self.all])
-            self.all = [x[0] for x in output]
+            self.all = process.map(self._init_helper, self.all)
 
-    def check(self):
+    def check(self, init_after_check=False):
         results = dict()
         with Pool(len(self.all)) as process:
-            output = process.map(self._mp_helper, [(x, "check") for x in self.all])
-        for counter in range(len(self.all)):
-            results[self.all[counter].module_name] = output[counter][1]
+            output = process.map(
+                self._check_helper, [(x, init_after_check) for x in self.all]
+            )
+        for item in output:
+            results[item[0].module_name] = item[1]
+        if init_after_check:
+            self.all = [x[0] for x in output]
         return results
