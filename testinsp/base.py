@@ -35,13 +35,11 @@ class TestInspector:
 
     def init(self):
         self.data = self.get_data()
-        self._store()
 
     def load(self):
         self._load_explicit()
 
     def store(self):
-        self.data = self.get_data()
         self._store()
 
     def check(self):
