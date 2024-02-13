@@ -42,9 +42,12 @@ class TestInspector:
     def store(self):
         self._store()
 
-    def check(self):
+    def check(self, init_after_check=False):
         comp = Comparator(self.module_name, self.exclude_list)
-        result_list = comp.compare(self.data, self.get_data())
+        current_state = self.get_data()
+        result_list = comp.compare(self.data, current_state)
+        if init_after_check:
+            self.data = current_state
         return result_list
 
     def run(self, command, shell=True, *args, **kwargs):
