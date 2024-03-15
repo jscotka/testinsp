@@ -1,4 +1,4 @@
-from multiprocessing import Pool
+from multiprocessing import Process, Manager
 from testinsp.network import NetworkInterfaces, FirewallStatus
 from testinsp.storage import DiskInfo
 from testinsp.etc import ListEtcDir
@@ -50,30 +50,42 @@ class RunChecks:
 
 
 class RunChecksInParallel(RunChecks):
+    def __init__(self, external_executor=None, exclude_dict: dict = None):
+        super().__init__(external_executor=external_executor, exclude_dict=exclude_dict)
+        self.process_manager = Manager()
+        __all = self.process_manager.list()
+        for item in self.all:
+            __all.append(item)
+        self.all = __all
+
     @staticmethod
     def _init_helper(class_item):
         class_item.init()
         return class_item
 
     @staticmethod
-    def _check_helper(params):
-        class_item = params[0]
-        init_after_check = params[1]
+    def _check_helper(class_item, init_after_check, result_dict):
         result = class_item.check(init_after_check=init_after_check)
-        return class_item, result
+        result_dict[class_item.module_name] = result
 
     def init(self):
-        with Pool(len(self.all)) as process:
-            self.all = process.map(self._init_helper, self.all)
+        processes = list()
+        for item in self.all:
+            proc = Process(target=self._init_helper, args=(item,))
+            proc.start()
+            processes.append(proc)
+        for item in processes:
+            item.join()
 
     def check(self, init_after_check=False):
-        results = dict()
-        with Pool(len(self.all)) as process:
-            output = process.map(
-                self._check_helper, [(x, init_after_check) for x in self.all]
+        results = self.process_manager.dict()
+        processes = list()
+        for item in self.all:
+            proc = Process(
+                target=self._check_helper, args=(item, init_after_check, results)
             )
-        for item in output:
-            results[item[0].module_name] = item[1]
-        if init_after_check:
-            self.all = [x[0] for x in output]
+            proc.start()
+            processes.append(proc)
+        for item in processes:
+            item.join()
         return results
