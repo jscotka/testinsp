@@ -3,6 +3,7 @@ from pprint import pprint
 from testinsp.main import RunChecks
 from subprocess import check_output
 from sys import stderr
+from yaml import safe_load
 
 
 def external_wrap(how):
@@ -22,14 +23,26 @@ def external_wrap(how):
     default="",
     help="Use own shell command to execute shell commands (e.g. ' ssh user@server -i private/key/path'). First character is used as separator for command splitting. shell command is then pasted as one argument",
 )
+@click.option(
+    "--exclude",
+    default="",
+    help="YAML file with exluede patterns for test inspector",
+)
 @click.pass_context
-def cli(ctx, executor):
+def cli(ctx, executor, exclude):
     external_executor = external_wrap(executor)
+    exclude_dict = {}
+    if exclude:
+        with open(exclude, "r") as fd:
+            exclude_dict = safe_load(fd)
+
     ctx.ensure_object(dict)
     if executor:
-        ctx.obj["check"] = RunChecks(external_executor=external_executor)
+        ctx.obj["check"] = RunChecks(
+            external_executor=external_executor, exclude_dict=exclude_dict
+        )
     else:
-        ctx.obj["check"] = RunChecks()
+        ctx.obj["check"] = RunChecks(exclude_dict=exclude_dict)
 
 
 @cli.command()
